@@ -1,0 +1,5 @@
+# Shell scripts must keep LF endings to run on Ubuntu, even when committed from Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary

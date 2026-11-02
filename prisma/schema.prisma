@@ -1,0 +1,184 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Authentication (Better Auth core schema) ──────────────────────────
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions     Session[]
+  accounts     Account[]
+  files        File[]
+  sharedWithMe FileShare[]
+  links        ShareLink[]
+  events       AccessEvent[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// Shared by Better Auth's limiter and Aether's own (link unlock attempts).
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rate_limit")
+}
+
+// ─── Files & access control ───────────────────────────────────────────
+
+enum Visibility {
+  PRIVATE // owner only
+  RESTRICTED // owner + invited users + valid temporary links
+  PUBLIC // anyone with the public URL
+}
+
+enum FileStatus {
+  PENDING // presigned upload issued, object not yet verified
+  READY // object verified in S3
+}
+
+model File {
+  id         String     @id @default(cuid())
+  ownerId    String
+  owner      User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name       String
+  size       BigInt
+  mimeType   String
+  s3Key      String     @unique
+  visibility Visibility @default(PRIVATE)
+  status     FileStatus @default(PENDING)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  shares FileShare[]
+  links  ShareLink[]
+  events AccessEvent[]
+
+  @@index([ownerId, status, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+  @@map("file")
+}
+
+model FileShare {
+  fileId    String
+  file      File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([fileId, userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("file_share")
+}
+
+model ShareLink {
+  id            String    @id @default(cuid())
+  fileId        String
+  file          File      @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  tokenHash     String    @unique // SHA-256 of the token, used for lookup
+  tokenEnc      String // AES-256-GCM sealed token, so the owner can copy the link again; never stored in plaintext
+  label         String?
+  expiresAt     DateTime
+  passwordHash  String?
+  maxDownloads  Int?
+  downloadCount Int       @default(0)
+  revokedAt     DateTime?
+  createdById   String
+  createdBy     User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+
+  events AccessEvent[]
+
+  @@index([fileId, createdAt(sort: Desc)])
+  @@map("share_link")
+}
+
+enum AccessAction {
+  VIEW
+  DOWNLOAD
+}
+
+enum AccessChannel {
+  SHARED_USER
+  PUBLIC_URL
+  TEMP_LINK
+}
+
+model AccessEvent {
+  id          String        @id @default(cuid())
+  fileId      String
+  file        File          @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  actorUserId String?
+  actor       User?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  linkId      String?
+  link        ShareLink?    @relation(fields: [linkId], references: [id], onDelete: SetNull)
+  action      AccessAction
+  channel     AccessChannel
+  ipHash      String?
+  at          DateTime      @default(now())
+
+  @@index([fileId, at(sort: Desc)])
+  @@map("access_event")
+}

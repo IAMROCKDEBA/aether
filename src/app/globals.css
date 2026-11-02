@@ -1,26 +1,338 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ──────────────────────────────────────────────────────────────────────
+   Aether palette: "Cloud Dancer & Obsidian"
+   Anchored on PANTONE 11-4201 Cloud Dancer (#F0EEE9), Colour of the Year 2026,
+   with obsidian ink, champagne gold, and three permission hues.
+   Text tokens meet WCAG AA on their canvas in both themes.
+   ────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+
+  --canvas: #f0eee9; /* Cloud Dancer */
+  --canvas-deep: #e7e3db;
+  --surface: #f7f5f1; /* porcelain */
+  --surface-raised: #fcfbf8;
+  --surface-sunken: #e9e6df;
+  --glass: rgb(252 251 248 / 0.72);
+
+  --ink: #16141a; /* obsidian */
+  --ink-soft: #46424c;
+  --ink-muted: #6b665f;
+  --ink-inverse: #f0eee9;
+
+  --line: rgb(22 20 26 / 0.085);
+  --line-strong: rgb(22 20 26 / 0.15);
+
+  --gold: #8a6a2e; /* champagne, deepened for text contrast */
+  --gold-bright: #c6a565;
+  --gold-soft: rgb(198 165 101 / 0.16);
+  --pearl-a: #e9d9bd;
+  --pearl-b: #d7dbe6;
+  --pearl-c: #e6d3dc;
+
+  --private: #57535e;
+  --private-soft: rgb(87 83 94 / 0.1);
+  --restricted: #9a6614;
+  --restricted-soft: rgb(212 150 50 / 0.14);
+  --public: #2f7560;
+  --public-soft: rgb(63 140 112 / 0.13);
+
+  --danger: #b03a2e;
+  --danger-soft: rgb(176 58 46 / 0.1);
+
+  --shadow-color: 30 22 10;
+  --shadow-sm: 0 1px 2px rgb(var(--shadow-color) / 0.06), 0 1px 1px rgb(var(--shadow-color) / 0.04);
+  --shadow-md: 0 1px 2px rgb(var(--shadow-color) / 0.05), 0 8px 24px -6px rgb(var(--shadow-color) / 0.12);
+  --shadow-lg: 0 2px 4px rgb(var(--shadow-color) / 0.04), 0 24px 64px -12px rgb(var(--shadow-color) / 0.22);
+  --ring: 0 0 0 1px var(--canvas), 0 0 0 3px var(--gold-bright);
+
+  --grain-opacity: 0.045;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas: #0c0b0e; /* obsidian */
+  --canvas-deep: #070609;
+  --surface: #131116;
+  --surface-raised: #1a181e;
+  --surface-sunken: #09080b;
+  --glass: rgb(22 20 26 / 0.66);
+
+  --ink: #f0eee9; /* Cloud Dancer */
+  --ink-soft: #c4bfb7;
+  --ink-muted: #8f8a83;
+  --ink-inverse: #16141a;
+
+  --line: rgb(240 238 233 / 0.075);
+  --line-strong: rgb(240 238 233 / 0.14);
+
+  --gold: #dcc08a;
+  --gold-bright: #e9d2a0;
+  --gold-soft: rgb(220 192 138 / 0.12);
+  --pearl-a: #3a2f1f;
+  --pearl-b: #1d2233;
+  --pearl-c: #33202b;
+
+  --private: #aaa6b2;
+  --private-soft: rgb(170 166 178 / 0.1);
+  --restricted: #e7b25a;
+  --restricted-soft: rgb(231 178 90 / 0.12);
+  --public: #7fc9ac;
+  --public-soft: rgb(127 201 172 / 0.11);
+
+  --danger: #f08a7c;
+  --danger-soft: rgb(240 138 124 / 0.1);
+
+  --shadow-color: 0 0 0;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px -8px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.35), 0 30px 80px -16px rgb(0 0 0 / 0.8);
+  --ring: 0 0 0 1px var(--canvas), 0 0 0 3px var(--gold);
+
+  --grain-opacity: 0.06;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-canvas: var(--canvas);
+  --color-canvas-deep: var(--canvas-deep);
+  --color-surface: var(--surface);
+  --color-raised: var(--surface-raised);
+  --color-sunken: var(--surface-sunken);
+  --color-glass: var(--glass);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-soft: var(--gold-soft);
+  --color-private: var(--private);
+  --color-private-soft: var(--private-soft);
+  --color-restricted: var(--restricted);
+  --color-restricted-soft: var(--restricted-soft);
+  --color-public: var(--public);
+  --color-public-soft: var(--public-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-instrument), "Times New Roman", serif;
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --ease-out-expo: var(--ease-out);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--line);
+  }
+
+  html {
+    background: var(--canvas);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    min-height: 100dvh;
+  }
+
+  ::selection {
+    background: var(--gold-bright);
+    color: #16141a;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+    border-radius: 10px;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Thin, quiet scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+/* ─── Signature textures ──────────────────────────────────────────── */
+
+/* Film grain: a single fixed layer, composited once. */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Iridescent pearl sheen used on hero surfaces. */
+.pearl {
+  background:
+    radial-gradient(120% 80% at 0% 0%, var(--pearl-a) 0%, transparent 55%),
+    radial-gradient(90% 90% at 100% 10%, var(--pearl-b) 0%, transparent 60%),
+    radial-gradient(100% 100% at 50% 110%, var(--pearl-c) 0%, transparent 60%),
+    var(--surface);
+}
+
+/* Hairline that catches light along the top edge of raised surfaces. */
+.edge-light {
+  position: relative;
+}
+.edge-light::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.55), rgb(255 255 255 / 0) 40%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+[data-theme="dark"] .edge-light::before {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0) 40%);
+}
+
+/* Cursor-following spotlight (position set via --mx/--my, compositor-only). */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    var(--gold-soft),
+    transparent 45%
+  );
+  z-index: -1;
+}
+.spotlight:hover::after {
+  opacity: 1;
+}
+
+/* Shimmering gold text for display accents. */
+.text-gilded {
+  background: linear-gradient(100deg, var(--gold) 0%, var(--gold-bright) 35%, var(--gold) 55%, var(--gold-bright) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gild 9s var(--ease-in-out) infinite;
+}
+@keyframes gild {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunken);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  animation: shimmer 1.6s var(--ease-in-out) infinite;
+}
+[data-theme="dark"] .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.05), transparent);
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Ticket perforation for temporary links. */
+.ticket {
+  --notch: 9px;
+  -webkit-mask:
+    radial-gradient(circle var(--notch) at 0 var(--notch-y, 50%), transparent 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% var(--notch-y, 50%), transparent 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle var(--notch) at 0 var(--notch-y, 50%), transparent 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--notch) at 100% var(--notch-y, 50%), transparent 98%, #000) right / 51% 100% no-repeat;
+}
+
+}
+
+/* Theme switch: radial reveal via the View Transitions API. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-4px);
+  }
+}
+@keyframes menu-out {
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
 }

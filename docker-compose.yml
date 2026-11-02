@@ -1,0 +1,37 @@
+# Local development services only.
+# PostgreSQL for app data and RustFS as an S3-compatible stand-in for Amazon S3.
+# For the real demo, point the S3_* variables in .env at Amazon S3 (see docs/AWS_SETUP.md).
+name: aether
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aether
+      POSTGRES_PASSWORD: aether_dev_password
+      POSTGRES_DB: aether
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aether -d aether"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  s3:
+    image: rustfs/rustfs:latest
+    restart: unless-stopped
+    environment:
+      RUSTFS_ACCESS_KEY: aether_local
+      RUSTFS_SECRET_KEY: aether_local_dev_secret
+    ports:
+      - "127.0.0.1:9000:9000"
+    volumes:
+      - s3data:/data
+
+volumes:
+  pgdata:
+  s3data:
