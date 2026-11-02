@@ -103,6 +103,12 @@ export async function readJson<T extends z.ZodType>(request: Request, schema: T)
 }
 
 export function clientIp(request: Request): string {
+  // Behind Cloudflare the edge-set header is authoritative; X-Forwarded-For's
+  // first hop can be supplied by the client itself.
+  if (env.CLIENT_IP_HEADER !== "x-forwarded-for") {
+    const value = request.headers.get(env.CLIENT_IP_HEADER);
+    if (value) return value.trim();
+  }
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]!.trim();
   return request.headers.get("x-real-ip") ?? "unknown";

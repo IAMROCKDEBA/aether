@@ -34,6 +34,7 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: env.secureCookies,
     cookiePrefix: "aether",
+    ipAddress: { ipAddressHeaders: [env.CLIENT_IP_HEADER] },
   },
   telemetry: { enabled: false },
   plugins: [nextCookies()],

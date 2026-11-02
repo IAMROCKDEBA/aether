@@ -25,6 +25,11 @@ const schema = z.object({
   S3_FORCE_PATH_STYLE: bool,
   MAX_FILE_SIZE_MB: z.coerce.number().int().positive().max(5 * 1024).default(100),
   USER_QUOTA_MB: z.coerce.number().int().positive().default(1024),
+  /** Header carrying the real client IP; "cf-connecting-ip" behind Cloudflare. */
+  CLIENT_IP_HEADER: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .default("x-forwarded-for"),
 });
 
 const parsed = schema.safeParse(process.env);

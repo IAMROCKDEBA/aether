@@ -45,6 +45,8 @@ const nextConfig: NextConfig = {
   // Every page in Aether is per-user and request-time; the static shell model of
   // Cache Components buys nothing here, so classic dynamic rendering is used.
   cacheComponents: false,
+  // Container builds ship the minimal standalone server; `pnpm start` keeps the default.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   poweredByHeader: false,
   devIndicators: false,
   reactStrictMode: true,

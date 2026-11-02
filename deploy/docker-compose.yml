@@ -1,0 +1,104 @@
+# Aether production stack for a shared host.
+#
+# Designed to coexist with other apps on the same machine:
+#   • no host ports at all: the only way in is the outbound Cloudflare tunnel;
+#   • its own networks (the database network has no internet access);
+#   • low CPU priority + hard CPU/memory caps, and the kernel's OOM killer is
+#     told to pick these containers before anything else on the host;
+#   • non-root, read-only filesystems, all Linux capabilities dropped.
+#
+# Usage (in /opt/aether, next to a chmod-600 .env):
+#   docker compose up -d db tunnel
+#   docker compose run --rm migrate
+#   docker compose up -d app
+name: aether
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt: ["no-new-privileges:true"]
+  oom_score_adj: 800
+  logging:
+    driver: json-file
+    options: { max-size: "5m", max-file: "3" }
+
+services:
+  app:
+    <<: *hardening
+    image: aether-app:${AETHER_TAG:-latest}
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://aether:${POSTGRES_PASSWORD}@db:5432/aether
+      CLIENT_IP_HEADER: cf-connecting-ip
+      NODE_OPTIONS: --max-old-space-size=384
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [edge, data]
+    read_only: true
+    tmpfs: ["/tmp:size=64m", "/app/.next/cache:size=64m,uid=1000,gid=1000"]
+    cap_drop: [ALL]
+    cpus: 0.6
+    cpu_shares: 256
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 256
+
+  migrate:
+    <<: *hardening
+    restart: "no"
+    image: aether-app:${AETHER_TAG:-latest}
+    profiles: [tools]
+    working_dir: /migrate
+    entrypoint: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+    command: []
+    environment:
+      DATABASE_URL: postgresql://aether:${POSTGRES_PASSWORD}@db:5432/aether
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [data]
+    cap_drop: [ALL]
+    cpus: 0.5
+    cpu_shares: 256
+    mem_limit: 384m
+
+  db:
+    <<: *hardening
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_USER: aether
+      POSTGRES_DB: aether
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aether -d aether"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    shm_size: 64m
+    cpus: 0.4
+    cpu_shares: 256
+    mem_limit: 256m
+    memswap_limit: 256m
+    pids_limit: 128
+
+  tunnel:
+    <<: *hardening
+    image: cloudflare/cloudflared:2025.9.1
+    # Quick tunnel: temporary https://<random>.trycloudflare.com, no account needed.
+    command: ["tunnel", "--no-autoupdate", "--url", "http://app:3000"]
+    networks: [edge]
+    read_only: true
+    cap_drop: [ALL]
+    cpus: 0.25
+    cpu_shares: 256
+    mem_limit: 128m
+    pids_limit: 64
+
+networks:
+  edge: {}
+  data:
+    internal: true
+
+volumes:
+  pgdata:

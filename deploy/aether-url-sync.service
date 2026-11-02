@@ -1,0 +1,10 @@
+[Unit]
+Description=Aether: follow the Cloudflare quick-tunnel URL
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/aether
+ExecStart=/opt/aether/sync-url.sh
+Nice=10
